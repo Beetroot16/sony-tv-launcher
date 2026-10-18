@@ -72,6 +72,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private static final long MINUTE_MS = 60_000L;
     private static final long PANEL_MS = 220L;
     private static final String KEY_SOUNDS = "sounds";
+    private static final String KEY_SHOW_SHELF = "show_shelf";     // the top row (dock) and the app grid
+    private static final String KEY_SHOW_WATCH = "show_watch";     // Continue Watching
     private static final String SONY_AUDIO_OUTPUT = "com.sony.dtv.audiooutput";
     private static final String SONY_TIMERS = "com.sony.dtv.timers";
     private static final int GRANT_FLAGS = Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -667,7 +669,32 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         });
     }
 
+    private boolean shelfShown() {
+        return prefs.getBoolean(KEY_SHOW_SHELF, true);
+    }
+
+    /** Continue Watching sits above the top row, so hiding the top row hides it too. */
+    private boolean watchAllowed() {
+        return shelfShown() && prefs.getBoolean(KEY_SHOW_WATCH, true);
+    }
+
+    /** Applies the quick-settings switches for the top row and Continue Watching. */
+    private void applyShelfPrefs() {
+        boolean shelf = shelfShown();
+        grid.setVisibility(shelf ? View.VISIBLE : View.INVISIBLE);
+        if (!shelf) {
+            if (moving) exitMoveMode();
+            dismissPopup();
+            resetHighlight();
+        }
+        if (!watchAllowed()) watchBlock.setVisibility(View.GONE);
+        layoutOverlays();
+        watchSignature = null;      // force a re-render so the row comes back when switched on
+        refreshWatchNext();
+    }
+
     private void renderWatchNext(List<WatchNext.Item> items) {
+        if (!watchAllowed()) items = Collections.emptyList();
         StringBuilder sig = new StringBuilder();
         for (WatchNext.Item it : items) {
             sig.append(it.id).append(':').append(it.title).append(':').append(it.subtitle).append(':')
@@ -813,6 +840,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void focusTile(int position) {
+        if (!shelfShown()) {            // the top row is hidden: keep focus on the top bar
+            lastPill.requestFocus();
+            return;
+        }
         if (adapter.getItemCount() == 0) return;
         final int pos = Math.max(0, Math.min(position, adapter.getItemCount() - 1));
         RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(pos);
@@ -1204,6 +1235,35 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     soundStatus[0].setText(soundsLabel());
                     sounds.select();
                 });
+        final TextView[] status = new TextView[2];
+        final TextView[] bothTitle = new TextView[1];
+        final Runnable refresh = () -> {
+            boolean shelf = shelfShown();
+            status[0].setText(getString(watchAllowed() ? R.string.qs_on : R.string.qs_off));
+            status[1].setText(getString(shelf ? R.string.qs_on : R.string.qs_off));
+            bothTitle[0].setText(shelf ? R.string.qs_hide_both : R.string.qs_show_both);
+        };
+        status[0] = addRow(qsItems, null, R.drawable.ic_av, getString(R.string.continue_watching), "", false, () -> {
+            prefs.edit().putBoolean(KEY_SHOW_WATCH, !prefs.getBoolean(KEY_SHOW_WATCH, true)).apply();
+            applyShelfPrefs();
+            sounds.select();
+            refresh.run();
+        });
+        status[1] = addRow(qsItems, null, R.drawable.ic_star, getString(R.string.qs_shelf), "", false, () -> {
+            prefs.edit().putBoolean(KEY_SHOW_SHELF, !shelfShown()).apply();
+            applyShelfPrefs();
+            sounds.select();
+            refresh.run();
+        });
+        addRow(qsItems, null, R.drawable.ic_home, getString(R.string.qs_hide_both), null, false, () -> {
+            boolean show = !shelfShown();
+            prefs.edit().putBoolean(KEY_SHOW_SHELF, show).putBoolean(KEY_SHOW_WATCH, show).apply();
+            applyShelfPrefs();
+            sounds.select();
+            refresh.run();
+        });
+        bothTitle[0] = qsItems.getChildAt(qsItems.getChildCount() - 1).findViewById(R.id.title);
+        refresh.run();
         addRow(qsItems, null, R.drawable.ic_refresh, getString(R.string.qs_reset), null, false, () -> {
             if (moving) exitMoveMode();
             adapter.resetFavourites();
