@@ -22,11 +22,18 @@ android {
         applicationId = "dev.dhruv.tvhome"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.2.2"
+        versionCode = 5
+        versionName = "0.2.3"
     }
 
     signingConfigs {
+        // Fixed debug key (not secret) so CI debug builds install over each other with `adb install -r`.
+        getByName("debug") {
+            storeFile = rootProject.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (keystoreProps.containsKey("storeFile")) {
             create("release") {
                 storeFile = file(keystoreProps.getProperty("storeFile"))
