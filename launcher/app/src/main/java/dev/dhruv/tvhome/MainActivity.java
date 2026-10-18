@@ -575,19 +575,62 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return cs != null ? cs.newDrawable(getResources()).mutate() : d;
     }
 
-    /** A tiny render of the art: scaled up full screen (plus RenderEffect blur on S+) it reads as a blur. */
+    /**
+     * A small render of the art, blurred in software so it also looks smooth below Android 12
+     * (where RenderEffect is unavailable). Scaled up full screen it reads as a soft blur.
+     */
     private Bitmap tinyBitmap(Drawable art, boolean iconArt, int color) {
-        int w = 48, h = 27;
+        int w = 128, h = 72;
         Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bmp);
         c.drawColor(iconArt || art == null ? darken(color) : Color.BLACK);
         if (art != null) {
             Drawable d = copyOf(art);
-            if (iconArt) d.setBounds(w / 2 - 7, h / 2 - 7, w / 2 + 7, h / 2 + 7);
+            int half = w * 7 / 48;
+            if (iconArt) d.setBounds(w / 2 - half, h / 2 - half, w / 2 + half, h / 2 + half);
             else d.setBounds(0, 0, w, h);
             d.draw(c);
         }
+        boxBlur(bmp, 5, 3);
         return bmp;
+    }
+
+    /** In-place box blur (edge-clamped), repeated {@code passes} times to approximate a Gaussian. */
+    private static void boxBlur(Bitmap bmp, int radius, int passes) {
+        int w = bmp.getWidth(), h = bmp.getHeight();
+        int[] px = new int[w * h];
+        int[] tmp = new int[w * h];
+        bmp.getPixels(px, 0, w, 0, 0, w, h);
+        for (int i = 0; i < passes; i++) {
+            blurPass(px, tmp, w, h, radius, true);
+            blurPass(tmp, px, w, h, radius, false);
+        }
+        bmp.setPixels(px, 0, w, 0, 0, w, h);
+    }
+
+    private static void blurPass(int[] src, int[] dst, int w, int h, int r, boolean horizontal) {
+        int lines = horizontal ? h : w;
+        int len = horizontal ? w : h;
+        int step = horizontal ? 1 : w;
+        int lineStep = horizontal ? w : 1;
+        int div = 2 * r + 1;
+        for (int l = 0; l < lines; l++) {
+            int base = l * lineStep;
+            int a = 0, rr = 0, g = 0, b = 0;
+            for (int k = -r; k <= r; k++) {
+                int p = src[base + Math.min(len - 1, Math.max(0, k)) * step];
+                a += p >>> 24; rr += (p >> 16) & 0xFF; g += (p >> 8) & 0xFF; b += p & 0xFF;
+            }
+            for (int i = 0; i < len; i++) {
+                dst[base + i * step] = ((a / div) << 24) | ((rr / div) << 16) | ((g / div) << 8) | (b / div);
+                int add = src[base + Math.min(len - 1, i + r + 1) * step];
+                int sub = src[base + Math.max(0, i - r) * step];
+                a += (add >>> 24) - (sub >>> 24);
+                rr += ((add >> 16) & 0xFF) - ((sub >> 16) & 0xFF);
+                g += ((add >> 8) & 0xFF) - ((sub >> 8) & 0xFF);
+                b += (add & 0xFF) - (sub & 0xFF);
+            }
+        }
     }
 
     private static int darken(int color) {
