@@ -1,0 +1,83 @@
+name: launcher-release
+
+# Builds the signed release APK and attaches it to a GitHub Release.
+# Triggered by publishing a release tagged launcher-vX.Y.Z, or manually for an existing tag.
+# If these repository secrets exist the APK is signed here (keystore never committed):
+#   LAUNCHER_KEYSTORE_B64, LAUNCHER_KEYSTORE_PASSWORD, LAUNCHER_KEY_ALIAS, LAUNCHER_KEY_PASSWORD
+# Without them the unsigned APK is only kept as a workflow artifact (sign it locally, see launcher/README.md).
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag, e.g. launcher-v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'launcher-v')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Write signing config
+        env:
+          KEYSTORE_B64: ${{ secrets.LAUNCHER_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.LAUNCHER_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.LAUNCHER_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.LAUNCHER_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "No signing secrets: building unsigned"; exit 0; fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/tv-home.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/tv-home.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > launcher/keystore.properties
+      - name: Lint and build release APK
+        working-directory: launcher
+        run: ./gradlew --no-daemon lint assembleRelease
+      - name: Verify and rename
+        run: |
+          BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          OUT=launcher/app/build/outputs/apk/release
+          "$BT/aapt2" dump badging "$OUT"/*.apk | head -40
+          if [ -f "$OUT/app-release.apk" ]; then
+            "$BT/apksigner" verify --print-certs "$OUT/app-release.apk"
+            ASSET="tv-home-${TAG#launcher-}.apk"
+            cp "$OUT/app-release.apk" "$ASSET"
+          else
+            ASSET=app-release-unsigned.apk
+            cp "$OUT/app-release-unsigned.apk" "$ASSET"
+          fi
+          ls -l "$ASSET"
+          echo "ASSET=$ASSET" >> "$GITHUB_ENV"
+      - name: Attach to release
+        if: env.ASSET != 'app-release-unsigned.apk'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "$ASSET" --clobber --repo "$GITHUB_REPOSITORY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tv-home-release
+          path: ${{ env.ASSET }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-report-release
+          path: launcher/app/build/reports/lint-results-*.html
+          if-no-files-found: ignore
