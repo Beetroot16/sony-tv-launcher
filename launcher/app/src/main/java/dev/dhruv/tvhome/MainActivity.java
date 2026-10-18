@@ -813,7 +813,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         AppAdapter.Entry e = adapter.entryAt(position);
         if (e == null) return;
         sounds.select();
-        PopupWindow menu = newPopup((int) (230 * density));
+        PopupWindow menu = newPopup((int) (300 * density));
         LinearLayout rows = menu.getContentView().findViewById(R.id.rows);
         if (adapter.isFavourite(position)) {
             addRow(rows, menu, R.drawable.ic_move, getString(R.string.menu_move), null, false,
@@ -1013,7 +1013,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void showInputs() {
         View anchor = findViewById(R.id.btnInputs);
         // Compact: as wide as the Inputs pill (a touch wider so "HDMI 1" fits), hanging right below it.
-        PopupWindow menu = newPopup(Math.max(anchor.getWidth(), (int) (170 * density)));
+        PopupWindow menu = newPopup(Math.max(anchor.getWidth(), (int) (280 * density)));
         LinearLayout rows = menu.getContentView().findViewById(R.id.rows);
 
         TvInputManager tim = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
