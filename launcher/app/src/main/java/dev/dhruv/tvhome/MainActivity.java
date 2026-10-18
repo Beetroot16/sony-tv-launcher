@@ -200,6 +200,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 AnimationUtils.loadAnimation(this, R.anim.tile_enter), 0.06f));
         adapter = new AppAdapter(this, this, COLUMNS, prefs);
         grid.setAdapter(adapter);
+        setShelfVisible(shelfShown());
 
         // tvOS layout: push the dock row to the bottom of the screen; the grid hides below until you press Down.
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
@@ -678,10 +679,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return shelfShown() && prefs.getBoolean(KEY_SHOW_WATCH, true);
     }
 
+    /** A merely INVISIBLE grid can still take focus, so block its descendants while it is hidden. */
+    private void setShelfVisible(boolean shown) {
+        grid.setVisibility(shown ? View.VISIBLE : View.INVISIBLE);
+        grid.setDescendantFocusability(shown ? ViewGroup.FOCUS_AFTER_DESCENDANTS : ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+    }
+
     /** Applies the quick-settings switches for the top row and Continue Watching. */
     private void applyShelfPrefs() {
         boolean shelf = shelfShown();
-        grid.setVisibility(shelf ? View.VISIBLE : View.INVISIBLE);
+        setShelfVisible(shelf);
         if (!shelf) {
             if (moving) exitMoveMode();
             dismissPopup();
