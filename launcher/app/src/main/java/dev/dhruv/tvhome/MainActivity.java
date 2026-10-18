@@ -104,6 +104,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView greeting;
     private TextView btnWifi;
     private View lastPill;
+    private DockDecoration dockDecoration;
     private View watchBlock;
     private HorizontalScrollView watchScroll;
     private LinearLayout watchRow;
@@ -195,12 +196,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         grid.setLayoutManager(new GridLayoutManager(this, COLUMNS));
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
-        grid.addItemDecoration(new DockDecoration(COLUMNS, density));
+        dockDecoration = new DockDecoration(COLUMNS, density);
+        grid.addItemDecoration(dockDecoration);
         grid.setLayoutAnimation(new LayoutAnimationController(
                 AnimationUtils.loadAnimation(this, R.anim.tile_enter), 0.06f));
         adapter = new AppAdapter(this, this, COLUMNS, prefs);
         grid.setAdapter(adapter);
-        setShelfVisible(shelfShown());
+        applyDock(shelfShown());
 
         // tvOS layout: push the dock row to the bottom of the screen; the grid hides below until you press Down.
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> parkDock(b - t));
@@ -382,7 +384,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         glassOnWatch = false;
         moveGlass(card);
         View item = (View) card.getParent();
-        if (position < COLUMNS) {
+        if (position < COLUMNS && shelfShown()) {
             lastDock = position;
             // Dock: park it at the bottom of the screen and show the top shelf for this app.
             int decoratedTop = item.getTop() - (int) (6 * density);
@@ -674,35 +676,35 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Pads the grid so the dock row is parked at the bottom of the screen; the rest hides below it. */
     private void parkDock(int gridHeight) {
         int dockRow = (int) ((145 + 6 + 12) * density);   // item height plus DockDecoration offsets
-        int want = Math.max(0, gridHeight - dockRow - (int) (30 * density));
+        // Dock on: park the dock row at the bottom. Dock off: the grid starts right under the top bar.
+        int want = shelfShown() ? Math.max(0, gridHeight - dockRow - (int) (30 * density)) : (int) (10 * density);
         if (grid.getPaddingTop() != want) {
             grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
         }
         layoutOverlays();
     }
 
-    /** A merely INVISIBLE grid can still take focus, so block its descendants while it is hidden. */
-    private void setShelfVisible(boolean shown) {
-        grid.setVisibility(shown ? View.VISIBLE : View.INVISIBLE);
-        grid.setDescendantFocusability(shown ? ViewGroup.FOCUS_AFTER_DESCENDANTS : ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-        if (shown) {
-            // Showing it again (e.g. after starting hidden): re-park the dock and start from the top.
-            grid.post(() -> {
-                parkDock(grid.getHeight());
-                grid.scrollToPosition(0);
-            });
-        }
+    private void applyDock(boolean on) {
+        dockDecoration.setDockSize(on ? COLUMNS : 0);
+        adapter.setDockEnabled(on);
     }
 
-    /** Applies the quick-settings switches for the top row and Continue Watching. */
+    /**
+     * Applies the quick-settings switches. Top row off removes the dock band and the shelf above it
+     * (including Continue Watching) but keeps every app: they become one grid, most recently opened first.
+     */
     private void applyShelfPrefs() {
-        boolean shelf = shelfShown();
-        setShelfVisible(shelf);
-        if (!shelf) {
-            if (moving) exitMoveMode();
-            dismissPopup();
-            resetHighlight();
-        }
+        boolean dock = shelfShown();
+        applyDock(dock);
+        if (moving) exitMoveMode();
+        dismissPopup();
+        resetHighlight();
+        lastFocused = 0;
+        lastDock = 0;
+        parkDock(grid.getHeight());
+        adapter.reload();
+        grid.invalidateItemDecorations();
+        grid.post(() -> grid.scrollToPosition(0));
         if (!watchAllowed()) watchBlock.setVisibility(View.GONE);
         layoutOverlays();
         watchSignature = null;      // force a re-render so the row comes back when switched on
@@ -856,10 +858,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     private void focusTile(int position) {
-        if (!shelfShown()) {            // the top row is hidden: keep focus on the top bar
-            lastPill.requestFocus();
-            return;
-        }
         if (adapter.getItemCount() == 0) return;
         final int pos = Math.max(0, Math.min(position, adapter.getItemCount() - 1));
         RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(pos);
