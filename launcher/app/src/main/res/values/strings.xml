@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Home</string>
+    <string name="continue_watching">Continue watching</string>
+    <string name="all_apps">All apps</string>
+    <string name="resume">Resume</string>
+    <string name="inputs">Inputs</string>
+    <string name="inputs_subtitle">HDMI and TV inputs</string>
+    <string name="settings">Settings</string>
+    <string name="settings_subtitle">Quick settings · or press MENU on the remote</string>
+    <string name="move_left">Move left</string>
+    <string name="move_right">Move right</string>
+    <string name="remove_from_top">Remove from top row</string>
+    <string name="add_to_top">Add to top row</string>
+    <string name="app_info">App info</string>
+    <string name="cannot_open">Can\'t open %1$s</string>
+    <string name="qs_title">Quick settings</string>
+    <string name="qs_wifi">Wi‑Fi</string>
+    <string name="qs_bluetooth">Bluetooth</string>
+    <string name="qs_sound">Sound output</string>
+    <string name="qs_picture">Picture</string>
+    <string name="qs_sleep">Sleep timer</string>
+    <string name="qs_inputs">Inputs</string>
+    <string name="qs_all_settings">All settings</string>
+    <string name="qs_launcher">Launcher</string>
+    <string name="qs_sounds_on">Focus sounds: On</string>
+    <string name="qs_sounds_off">Focus sounds: Off</string>
+    <string name="qs_reset">Reset top row</string>
+    <string name="qs_reset_done">Top row reset</string>
+    <string name="qs_hint">Long-press OK on any app to move it, or to add it to / remove it from the top row.</string>
+</resources>

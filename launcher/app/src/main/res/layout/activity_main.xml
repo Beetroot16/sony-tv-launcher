@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg"
+    android:clipChildren="false">
+
+    <!-- Blurred, darkened copy of the focused tile's art -->
+    <dev.dhruv.tvhome.CrossfadeView
+        android:id="@+id/hero_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.85" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/scrim" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:orientation="vertical">
+
+        <!-- Top shelf hero: ~55% of the screen -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="55"
+            android:clipChildren="false"
+            android:paddingStart="56dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="56dp"
+            android:paddingBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:format12Hour="h:mm"
+                    android:format24Hour="HH:mm"
+                    android:textColor="@android:color/white"
+                    android:textSize="36sp" />
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:format12Hour="EEEE, d MMMM"
+                    android:format24Hour="EEEE, d MMMM"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:clipChildren="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <dev.dhruv.tvhome.CrossfadeView
+                    android:id="@+id/hero_art"
+                    android:layout_width="288dp"
+                    android:layout_height="162dp" />
+
+                <LinearLayout
+                    android:id="@+id/hero_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="36dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/hero_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:fontFamily="sans-serif-medium"
+                        android:maxLines="2"
+                        android:textColor="@android:color/white"
+                        android:textSize="40sp" />
+
+                    <TextView
+                        android:id="@+id/hero_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <ScrollView
+            android:id="@+id/rows_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="45"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:fadingEdgeLength="24dp"
+            android:requiresFadingEdge="vertical"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/rows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    android:id="@+id/watch_header"
+                    style="@style/RowHeader"
+                    android:text="@string/continue_watching"
+                    android:visibility="gone" />
+
+                <HorizontalScrollView
+                    android:id="@+id/watch_scroll"
+                    style="@style/Row"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/watch_row"
+                        style="@style/RowContent" />
+                </HorizontalScrollView>
+
+                <HorizontalScrollView
+                    android:id="@+id/top_scroll"
+                    style="@style/Row">
+
+                    <LinearLayout
+                        android:id="@+id/top_row"
+                        style="@style/RowContent" />
+                </HorizontalScrollView>
+
+                <TextView
+                    android:id="@+id/all_header"
+                    style="@style/RowHeader"
+                    android:text="@string/all_apps" />
+
+                <HorizontalScrollView
+                    android:id="@+id/all_scroll"
+                    style="@style/Row">
+
+                    <LinearLayout
+                        android:id="@+id/all_row"
+                        style="@style/RowContent" />
+                </HorizontalScrollView>
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Quick settings: scrim + panel sliding in from the right -->
+    <FrameLayout
+        android:id="@+id/qs_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/qs_scrim"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#A6000000" />
+
+        <ScrollView
+            android:id="@+id/qs_panel"
+            android:layout_width="360dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="@drawable/panel_bg"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/qs_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="32dp" />
+        </ScrollView>
+    </FrameLayout>
+</FrameLayout>
