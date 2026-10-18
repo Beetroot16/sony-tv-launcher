@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 // Release signing comes from launcher/keystore.properties (never committed):
@@ -23,8 +22,8 @@ android {
         applicationId = "dev.dhruv.tvhome"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     signingConfigs {
@@ -51,10 +50,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     lint {
         abortOnError = true
         checkReleaseBuilds = true
@@ -64,6 +59,11 @@ android {
     }
 
     packaging {
-        resources.excludes += setOf("DebugProbesKt.bin", "kotlin/**", "META-INF/*.version", "META-INF/**/*.kotlin_module")
+        resources.excludes += setOf("META-INF/*.version", "META-INF/**/*.kotlin_module", "kotlin/**")
     }
+}
+
+dependencies {
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.dynamicanimation:dynamicanimation:1.0.0")
 }
