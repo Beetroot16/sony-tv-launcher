@@ -58,6 +58,7 @@ android {
     lint {
         abortOnError = true
         checkReleaseBuilds = true
+        textReport = true
         // No network access to fetch newer dependency versions in CI / offline builds.
         disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion", "OldTargetApi")
     }
