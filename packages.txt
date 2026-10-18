@@ -1,0 +1,11 @@
+tv.samba.ssm
+tv.samba.ssm.ui
+com.sony.dtv.promos
+com.sony.dtv.sonyselect
+com.sony.dtv.demosupport
+com.sony.dtv.demosystemsupport
+com.sony.dtv.multiscreendemo
+com.sonyericsson.idd.agent
+com.google.android.feedback
+com.google.android.play.games
+com.mitv.tvhome.mitvplus
