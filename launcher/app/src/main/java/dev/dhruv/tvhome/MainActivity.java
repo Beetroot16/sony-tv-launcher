@@ -203,15 +203,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         setShelfVisible(shelfShown());
 
         // tvOS layout: push the dock row to the bottom of the screen; the grid hides below until you press Down.
-        grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
-            int h = b - t;
-            int dockRow = (int) ((145 + 6 + 12) * density);   // item height plus DockDecoration offsets
-            int want = Math.max(0, h - dockRow - (int) (30 * density));
-            if (grid.getPaddingTop() != want) {
-                grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
-            }
-            layoutOverlays();
-        });
+        grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> parkDock(b - t));
         watchBlock.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> layoutOverlays());
         heroBlock.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> layoutOverlays());
 
@@ -679,10 +671,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return shelfShown() && prefs.getBoolean(KEY_SHOW_WATCH, true);
     }
 
+    /** Pads the grid so the dock row is parked at the bottom of the screen; the rest hides below it. */
+    private void parkDock(int gridHeight) {
+        int dockRow = (int) ((145 + 6 + 12) * density);   // item height plus DockDecoration offsets
+        int want = Math.max(0, gridHeight - dockRow - (int) (30 * density));
+        if (grid.getPaddingTop() != want) {
+            grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
+        }
+        layoutOverlays();
+    }
+
     /** A merely INVISIBLE grid can still take focus, so block its descendants while it is hidden. */
     private void setShelfVisible(boolean shown) {
         grid.setVisibility(shown ? View.VISIBLE : View.INVISIBLE);
         grid.setDescendantFocusability(shown ? ViewGroup.FOCUS_AFTER_DESCENDANTS : ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        if (shown) {
+            // Showing it again (e.g. after starting hidden): re-park the dock and start from the top.
+            grid.post(() -> {
+                parkDock(grid.getHeight());
+                grid.scrollToPosition(0);
+            });
+        }
     }
 
     /** Applies the quick-settings switches for the top row and Continue Watching. */
