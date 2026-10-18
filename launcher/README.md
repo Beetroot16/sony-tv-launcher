@@ -58,9 +58,10 @@ if you ever re-sign with a new keystore, uninstall first
 (`adb uninstall dev.dhruv.tvhome`), then install and run `set-home-activity` again.
 Uninstalling resets the saved top-row order.
 
-`v0.1.0` was signed with a one-off key generated in the cloud build session (not kept), so the
-next release will need that uninstall once. To keep future upgrades seamless, create your own
-key and either sign locally or add it as repository secrets (below).
+`v0.1.0` was signed with a key generated in the cloud build session (certificate SHA-256
+`6da18894…6628be`, `CN=TV Home, O=dhruv`). That keystore was handed over outside git. Keep it
+to sign later versions so `adb install -r` upgrades in place. You can also add it as the
+repository secrets below so CI signs releases for you.
 
 ## Build
 
