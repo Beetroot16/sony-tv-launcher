@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -76,7 +77,7 @@ final class ImageLoader {
 
     private static byte[] read(Context ctx, String uri) throws IOException {
         Uri parsed = Uri.parse(uri);
-        String scheme = parsed.getScheme() == null ? "" : parsed.getScheme().toLowerCase();
+        String scheme = parsed.getScheme() == null ? "" : parsed.getScheme().toLowerCase(Locale.ROOT);
         HttpURLConnection conn = null;
         InputStream in;
         if (scheme.equals("http") || scheme.equals("https")) {
