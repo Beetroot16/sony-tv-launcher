@@ -4,7 +4,7 @@ name: launcher-release
 # Triggered by publishing a release tagged launcher-vX.Y.Z, or manually for an existing tag.
 # If these repository secrets exist the APK is signed here (keystore never committed):
 #   LAUNCHER_KEYSTORE_B64, LAUNCHER_KEYSTORE_PASSWORD, LAUNCHER_KEY_ALIAS, LAUNCHER_KEY_PASSWORD
-# Without them it attaches app-release-unsigned.apk, to be signed locally (see launcher/README.md).
+# Without them the unsigned APK is only kept as a workflow artifact (sign it locally, see launcher/README.md).
 
 on:
   release:
@@ -67,9 +67,14 @@ jobs:
           ls -l "$ASSET"
           echo "ASSET=$ASSET" >> "$GITHUB_ENV"
       - name: Attach to release
+        if: env.ASSET != 'app-release-unsigned.apk'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$TAG" "$ASSET" --clobber --repo "$GITHUB_REPOSITORY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tv-home-release
+          path: ${{ env.ASSET }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

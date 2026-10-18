@@ -95,9 +95,11 @@ apksigner verify --print-certs tv-home.apk
 ## CI
 
 - `.github/workflows/launcher.yml`: on pushes touching `launcher/**`, runs `lint assembleDebug`
-  and uploads `tv-home-debug` (the debug APK) and the lint report as workflow artifacts.
+  plus `assembleRelease`, and uploads `tv-home-debug`, `tv-home-release-unsigned` and the lint
+  report as workflow artifacts.
 - `.github/workflows/launcher-release.yml`: when a release tagged `launcher-v*` is published
   (or run manually with a tag), runs `lint assembleRelease` and attaches the APK to the release.
   If the repository secrets `LAUNCHER_KEYSTORE_B64` (base64 of the .jks),
   `LAUNCHER_KEYSTORE_PASSWORD`, `LAUNCHER_KEY_ALIAS`, `LAUNCHER_KEY_PASSWORD` exist it attaches a
-  signed `tv-home-vX.Y.Z.apk`; otherwise `app-release-unsigned.apk` to sign by hand as above.
+  signed `tv-home-vX.Y.Z.apk`; otherwise it only keeps the unsigned APK as a workflow artifact
+  (sign it by hand as above and `gh release upload` it).

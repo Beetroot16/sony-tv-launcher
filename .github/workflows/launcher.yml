@@ -23,8 +23,8 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
-      - name: Lint and build debug APK
-        run: ./gradlew --no-daemon lint assembleDebug
+      - name: Lint and build APKs
+        run: ./gradlew --no-daemon lint assembleDebug assembleRelease
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -35,3 +35,7 @@ jobs:
         with:
           name: tv-home-debug
           path: launcher/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tv-home-release-unsigned
+          path: launcher/app/build/outputs/apk/release/*.apk
