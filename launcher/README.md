@@ -1,7 +1,7 @@
 # Home — Apple TV–style launcher for Android TV / Google TV
 
-A small (plain Views + Kotlin, no AndroidX) home screen for the Sony Bravia KD-55X80K
-(Google TV, Android 12), driven entirely by the D-pad remote.
+A small (Java, plain Views, no AndroidX) home screen for Android TV / Google TV, driven entirely
+by the D-pad remote. Built and tested on a Sony Bravia KD-55X80K (Google TV, Android 12).
 
 - **Top shelf hero** (top ~55% of the screen): the focused tile's art shown large, a blurred,
   darkened copy as the full-screen background, and the name in big type. It crossfades (~250 ms)
@@ -9,8 +9,8 @@ A small (plain Views + Kotlin, no AndroidX) home screen for the Sony Bravia KD-5
 - **Continue watching** row (from the system Watch Next list; hidden if empty or not readable).
 - **Top row**: large rounded tiles using each app's TV banner (icon on a colour card if the app
   has none). The focused tile scales to 1.1x with a soft glow and shows its name underneath.
-  Defaults: Netflix, YouTube, Prime Video, JioHotstar, Sony LIV, ZEE5, Apple TV, Crunchyroll,
-  MUBI, MX Player (installed ones only), then **Inputs** (`com.sony.dtv.tvx`, if present) and
+  Defaults (`res/values/config.xml`): ZEE5, YouTube, Prime Video, JioHotstar, Sony LIV, Apple TV,
+  Crunchyroll, MUBI, MX Player (installed ones only), then **Inputs** (`com.sony.dtv.tvx`, if present) and
   **Settings** (opens the quick settings panel).
 - **All apps** row: every other leanback app, A–Z.
 - **Long-press OK** on an app: Move left / Move right / Remove from (or Add to) top row / App info.
@@ -27,15 +27,15 @@ A small (plain Views + Kotlin, no AndroidX) home screen for the Sony Bravia KD-5
 
 HOME activity: **`dev.dhruv.tvhome/.MainActivity`**
 
-## Install / activate (from the Mac)
+## Install / activate
+
+From the repo root (see `../CLAUDE.md` for the full walkthrough):
 
 ```sh
-adb connect 192.168.0.163:5555 && adb install -r tv-home-v0.1.0.apk && adb shell cmd package set-home-activity dev.dhruv.tvhome/.MainActivity
+scripts/install-launcher.sh      # latest release (or: scripts/install-launcher.sh my.apk)
+scripts/tv-home.sh custom        # make it Home
+scripts/tv-home.sh stock         # back to the stock home screen
 ```
-
-Then press Home on the remote. To go back to Projectivy:
-`adb shell cmd package set-home-activity <projectivy package>/<activity>`
-(see `adb shell cmd package query-activities -a android.intent.action.MAIN -c android.intent.category.HOME`).
 
 ### Continue watching permission
 
@@ -52,16 +52,12 @@ expected, nothing else is affected.
 
 ## Signing
 
-The keystore and its passwords are **never committed** (`*.jks`, `keystore.properties` are
-git-ignored). A release built with a different key can't be installed over an existing one:
-if you ever re-sign with a new keystore, uninstall first
-(`adb uninstall dev.dhruv.tvhome`), then install and run `set-home-activity` again.
-Uninstalling resets the saved top-row order.
-
-`v0.1.0` was signed with a key generated in the cloud build session (certificate SHA-256
-`6da18894…6628be`, `CN=TV Home, O=dhruv`). That keystore was handed over outside git. Keep it
-to sign later versions so `adb install -r` upgrades in place. You can also add it as the
-repository secrets below so CI signs releases for you.
+Debug and release builds are signed with `launcher/debug.keystore`, which is committed on
+purpose (it's a throwaway key, password `android`). That way every build, local or CI, installs
+over the previous one with `adb install -r`. If you want your own key, put it in
+`launcher/keystore.properties` (git-ignored, format below) or in the repository secrets listed
+under CI. Builds signed with a different key need `adb uninstall dev.dhruv.tvhome` first, which
+resets the saved tile order.
 
 ## Build
 
@@ -71,7 +67,7 @@ with `sdk.dir=...`).
 ```sh
 cd launcher
 ./gradlew lint assembleDebug      # app/build/outputs/apk/debug/app-debug.apk
-./gradlew lint assembleRelease    # signed if keystore.properties exists, else app-release-unsigned.apk
+./gradlew lint assembleRelease    # signed with keystore.properties if present, else the debug key
 ```
 
 `launcher/keystore.properties` (git-ignored):
@@ -85,22 +81,13 @@ keyPassword=...
 
 Create a key: `keytool -genkeypair -keystore tv-home.jks -alias tvhome -keyalg RSA -keysize 3072 -validity 10000`.
 
-Sign an unsigned APK by hand (build-tools on PATH):
-
-```sh
-zipalign -p -f 4 app-release-unsigned.apk aligned.apk
-apksigner sign --ks tv-home.jks --ks-key-alias tvhome --out tv-home.apk aligned.apk
-apksigner verify --print-certs tv-home.apk
-```
-
 ## CI
 
-- `.github/workflows/launcher.yml`: on pushes touching `launcher/**`, runs `lint assembleDebug`
-  plus `assembleRelease`, and uploads `tv-home-debug`, `tv-home-release-unsigned` and the lint
-  report as workflow artifacts.
+- `.github/workflows/launcher.yml`: on pushes touching `launcher/**`, runs `lint`,
+  `assembleDebug` and `assembleRelease`, and uploads `tv-home-debug`, `tv-home-release` and the
+  lint report as workflow artifacts.
 - `.github/workflows/launcher-release.yml`: when a release tagged `launcher-v*` is published
-  (or run manually with a tag), runs `lint assembleRelease` and attaches the APK to the release.
-  If the repository secrets `LAUNCHER_KEYSTORE_B64` (base64 of the .jks),
-  `LAUNCHER_KEYSTORE_PASSWORD`, `LAUNCHER_KEY_ALIAS`, `LAUNCHER_KEY_PASSWORD` exist it attaches a
-  signed `tv-home-vX.Y.Z.apk`; otherwise it only keeps the unsigned APK as a workflow artifact
-  (sign it by hand as above and `gh release upload` it).
+  (`gh release create launcher-vX.Y.Z --generate-notes`), builds the release APK and attaches
+  `tv-home-vX.Y.Z.apk` and `tv-home.apk`. It signs with your own key if the secrets
+  `LAUNCHER_KEYSTORE_B64`, `LAUNCHER_KEYSTORE_PASSWORD`, `LAUNCHER_KEY_ALIAS` and
+  `LAUNCHER_KEY_PASSWORD` exist, otherwise with the debug key.

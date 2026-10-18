@@ -4,7 +4,8 @@ name: launcher-release
 # Triggered by publishing a release tagged launcher-vX.Y.Z, or manually for an existing tag.
 # If these repository secrets exist the APK is signed here (keystore never committed):
 #   LAUNCHER_KEYSTORE_B64, LAUNCHER_KEYSTORE_PASSWORD, LAUNCHER_KEY_ALIAS, LAUNCHER_KEY_PASSWORD
-# Without them the unsigned APK is only kept as a workflow artifact (sign it locally, see launcher/README.md).
+# Without them it's signed with the committed debug key (launcher/debug.keystore), so it always installs.
+# Two assets are attached: tv-home-vX.Y.Z.apk and tv-home.apk (stable name for releases/latest/download/).
 
 on:
   release:
@@ -56,21 +57,16 @@ jobs:
           BT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
           OUT=launcher/app/build/outputs/apk/release
           "$BT/aapt2" dump badging "$OUT"/*.apk | head -40
-          if [ -f "$OUT/app-release.apk" ]; then
-            "$BT/apksigner" verify --print-certs "$OUT/app-release.apk"
-            ASSET="tv-home-${TAG#launcher-}.apk"
-            cp "$OUT/app-release.apk" "$ASSET"
-          else
-            ASSET=app-release-unsigned.apk
-            cp "$OUT/app-release-unsigned.apk" "$ASSET"
-          fi
+          "$BT/apksigner" verify --print-certs "$OUT/app-release.apk"
+          ASSET="tv-home-${TAG#launcher-}.apk"
+          cp "$OUT/app-release.apk" "$ASSET"
+          cp "$OUT/app-release.apk" tv-home.apk
           ls -l "$ASSET"
           echo "ASSET=$ASSET" >> "$GITHUB_ENV"
       - name: Attach to release
-        if: env.ASSET != 'app-release-unsigned.apk'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" "$ASSET" --clobber --repo "$GITHUB_REPOSITORY"
+        run: gh release upload "$TAG" "$ASSET" tv-home.apk --clobber --repo "$GITHUB_REPOSITORY"
       - uses: actions/upload-artifact@v4
         with:
           name: tv-home-release

@@ -1,0 +1,6 @@
+# Ad / tracking / unused packages found on many Google TV and Android TV sets (any brand).
+# Disabled with scripts/debloat.sh; undo with scripts/restore.sh.
+tv.samba.ssm                      # Samba TV: identifies what's on screen (ACR) for ad targeting
+tv.samba.ssm.ui                   # Samba TV opt-in screens
+com.google.android.feedback       # Google feedback reporter
+com.google.android.play.games     # Play Games

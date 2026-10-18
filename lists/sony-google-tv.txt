@@ -1,0 +1,8 @@
+# Sony Bravia (Google TV, 2021+), tested on KD-55X80K / Android 12. Use with google-tv-common.txt.
+# Leave every other com.sony.dtv.* package alone: they run inputs, picture, sound, the tuner and the remote.
+com.sony.dtv.promos               # Sony promotions
+com.sony.dtv.sonyselect           # Sony Select app recommendations
+com.sony.dtv.demosupport          # store demo mode
+com.sony.dtv.demosystemsupport    # store demo mode
+com.sony.dtv.multiscreendemo      # store demo mode
+com.sonyericsson.idd.agent        # Sony usage-data collector

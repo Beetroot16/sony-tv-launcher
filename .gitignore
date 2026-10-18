@@ -4,3 +4,6 @@ build/
 .gradle/
 local.properties
 .idea/
+
+# per-TV state written by scripts/ (address, what was disabled, screenshots)
+state/
