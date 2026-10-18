@@ -187,6 +187,18 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         reload();
     }
 
+    /**
+     * Recently-used dock: the launched app moves to the front and the dock keeps only the latest
+     * {@code dockSize} apps. Saved only; the list is rebuilt on the next reload (when Home resumes).
+     */
+    void noteLaunched(String key) {
+        List<String> favs = currentFavourites();
+        favs.remove(key);
+        favs.add(0, key);
+        while (favs.size() > dockSize) favs.remove(favs.size() - 1);
+        saveFavourites(favs);
+    }
+
     void resetFavourites() {
         prefs.edit().remove(KEY_FAVOURITES).apply();
         reload();

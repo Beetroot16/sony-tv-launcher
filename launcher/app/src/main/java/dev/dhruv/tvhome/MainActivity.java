@@ -845,6 +845,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         try {
             startActivity(i);
+            adapter.noteLaunched(e.key);
         } catch (Exception ex) {
             Toast.makeText(this, getString(R.string.cannot_open, e.label), Toast.LENGTH_SHORT).show();
         }
