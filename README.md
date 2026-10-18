@@ -4,6 +4,11 @@ Remove the sponsored banners, ad rows and tracking apps from an Android TV / Goo
 (optionally) swap the home screen for a clean, Apple TV–style launcher. Everything runs over
 Wi‑Fi ADB from your computer: no root, nothing uninstalled, and one command undoes it all.
 
+**Launcher APK, ready to install (no building needed):**
+[tv-home.apk](https://github.com/dhruv2003/sony-tv-launcher/releases/latest/download/tv-home.apk)
+([all releases](https://github.com/dhruv2003/sony-tv-launcher/releases)). Install it with
+`adb install tv-home.apk`, or let `scripts/install-launcher.sh` download and install it for you.
+
 Tested on a Sony Bravia KD-55X80K (Google TV, Android 12). It should work on any Android TV /
 Google TV set (Sony, TCL, Hisense, Philips, Xiaomi, Chromecast with Google TV…); brand-specific
 package lists live in `lists/`.
