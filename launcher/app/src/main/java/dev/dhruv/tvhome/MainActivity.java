@@ -981,12 +981,24 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         popup = p;
         View panel = p.getContentView();
         LinearLayout rows = panel.findViewById(R.id.rows);
-        // Drop in: fade and unfold from the top edge.
+        // Below the anchor when it fits, otherwise above it (the dock sits near the bottom edge).
+        panel.measure(View.MeasureSpec.makeMeasureSpec(p.getWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        int panelH = panel.getMeasuredHeight();
+        int gap = (int) (10 * density);
+        int margin = (int) (24 * density);
+        int[] loc = new int[2];
+        anchor.getLocationOnScreen(loc);
+        int screenH = root.getRootView().getHeight();
+        boolean below = loc[1] + anchor.getHeight() + gap + panelH <= screenH - margin;
+        int y = below ? loc[1] + anchor.getHeight() + gap
+                : Math.max(margin, loc[1] - gap - panelH);
+        // Drop in: fade and unfold from the edge nearest the tile.
         panel.setAlpha(0f);
-        panel.setPivotY(0f);
+        panel.setPivotY(below ? 0f : panelH);
         panel.setScaleY(0.92f);
-        panel.setTranslationY(-8 * density);
-        p.showAsDropDown(anchor, 0, (int) (10 * density), Gravity.START);
+        panel.setTranslationY((below ? -8 : 8) * density);
+        p.showAtLocation(root, Gravity.TOP | Gravity.START, loc[0], y);
         panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
                 .setInterpolator(new DecelerateInterpolator(1.6f)).start();
         rows.getChildAt(0).requestFocus();

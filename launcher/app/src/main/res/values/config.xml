@@ -7,12 +7,11 @@
 
     <!-- Default favourites, in order. The first `columns` sit in the dock; missing apps are skipped. -->
     <string-array name="default_favourites" translatable="false">
-        <item>com.netflix.ninja</item>
+        <item>com.graymatrix.did</item>
         <item>com.google.android.youtube.tv</item>
         <item>com.amazon.amazonvideo.livingroom</item>
         <item>in.startv.hotstar</item>
         <item>com.sonyliv</item>
-        <item>com.graymatrix.did</item>
         <item>com.apple.atve.sony.appletv</item>
         <item>com.crunchyroll.crunchyroid</item>
         <item>com.mubi</item>
